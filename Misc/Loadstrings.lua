@@ -5,7 +5,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/shakar60/Evade/refs/h
 loadstring(game:HttpGet("https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/Padding%20Space%20Detector.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/TimerGUI%20No%20Repeat.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/VIP%20Macro%20Command.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/Reload%20And%20Front%20View.lua"))()
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
