@@ -1,3 +1,4 @@
+--Delete Spacer More than 1
 local CoreGui = game:GetService("CoreGui")
 local spacer = CoreGui.TopBarApp.TopBarApp.UnibarLeftFrame.StackedElements.LeaderboardSpacer
 
