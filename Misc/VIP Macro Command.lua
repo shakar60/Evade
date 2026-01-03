@@ -34,49 +34,65 @@ local function safeWriteFile(path, data)
 	return success
 end
 
-local CONFIG_DIR = "DaraHub"
-local CONFIG_FILE = CONFIG_DIR .. "/EvadeMacroVipCMD.json"
+local CONFIG_DIR = "WindUI/Evade Script"
+local CONFIG_FILE = CONFIG_DIR .. "/VIPMacroCommand.json"
 
 if isfolder and not isfolder(CONFIG_DIR) then makefolder(CONFIG_DIR) end
 
 local Presets = {}
-local function serializeMacro(macro)
-	local ser = table.clone(macro)
-	ser.keybind = macro.keybind.Name
-	return ser
-end
-local function deserializeMacro(ser)
-	local macro = table.clone(ser)
-	macro.keybind = ser.keybind and Enum.KeyCode[ser.keybind] or Enum.KeyCode.F
-	return macro
-end
+
 local function loadPresets()
 	local data = safeReadFile(CONFIG_FILE)
 	if data then
 		local success, decoded = pcall(HttpService.JSONDecode, HttpService, data)
 		if success and typeof(decoded) == "table" then
-			Presets = {}
-			for name, arr in pairs(decoded) do
-				Presets[name] = {}
-				for i, ser in ipairs(arr) do
-					Presets[name][i] = deserializeMacro(ser)
-				end
-			end
+			Presets = decoded
 		end
 	end
 end
+
 local function savePresets()
-	local toSave = {}
-	for name, macros in pairs(Presets) do
-		toSave[name] = {}
-		for i, macro in ipairs(macros) do
-			toSave[name][i] = serializeMacro(macro)
-		end
-	end
-	local json = HttpService:JSONEncode(toSave)
+	local json = HttpService:JSONEncode(Presets)
 	safeWriteFile(CONFIG_FILE, json)
 end
+
 loadPresets()
+
+
+local function makeDraggable(gui)
+	local dragging, dragInput, dragStart, startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MacroManagerGUI"
@@ -86,31 +102,46 @@ ScreenGui.Parent = CoreGui
 
 local Main = Instance.new("Frame")
 Main.Name = "MainFrame"
-Main.Size = UDim2.new(0,380*DPI,0,480*DPI)
+Main.Size = UDim2.new(0,320*DPI,0,420*DPI)
 Main.Position = UDim2.new(0.5,0,0.5,0)
 Main.AnchorPoint = Vector2.new(0.5,0.5)
 Main.BackgroundColor3 = Color3.fromRGB(25,25,35)
 Main.ClipsDescendants = true
 Main.Parent = ScreenGui
-Main.Draggable = true
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,12)
+makeDraggable(Main)
 
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = "TitleBar"
-TitleBar.Size = UDim2.new(1,0,0,36*DPI)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30,30,45)
+TitleBar.Size = UDim2.new(1, 0, 0, 36*DPI)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+TitleBar.BorderSizePixel = 0
 TitleBar.Parent = Main
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+local BottomOverlap = Instance.new("Frame")
+BottomOverlap.Name = "BottomOverlap"
+BottomOverlap.Size = UDim2.new(1, 0, 0.5, 0)
+BottomOverlap.Position = UDim2.new(0, 0, 0.5, 0)
+BottomOverlap.BackgroundColor3 = TitleBar.BackgroundColor3
+BottomOverlap.BorderSizePixel = 0
+BottomOverlap.ZIndex = TitleBar.ZIndex
+BottomOverlap.Parent = TitleBar
 
 local Title = Instance.new("TextLabel")
 Title.Name = "TitleLabel"
-Title.Size = UDim2.new(1,-84,1,0)
-Title.Position = UDim2.new(0,8,0,0)
+Title.Size = UDim2.new(1, -84, 1, 0)
+Title.Position = UDim2.new(0, 8, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Macro Manager"
-Title.TextColor3 = Color3.new(1,1,1)
+Title.Text = "VIP Command Macro"
+Title.TextColor3 = Color3.new(1, 1, 1)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16*DPI
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = TitleBar.ZIndex + 1
 Title.Parent = TitleBar
 
 local ConfigBtn = Instance.new("TextButton")
@@ -158,7 +189,7 @@ NoMacrosLabel.Name = "NoMacrosLabel"
 NoMacrosLabel.Size = UDim2.new(1,-32,1,-100)
 NoMacrosLabel.Position = UDim2.new(0,16,0,50)
 NoMacrosLabel.BackgroundTransparency = 1
-NoMacrosLabel.Text = "No VIP Command macros available"
+NoMacrosLabel.Text = "No Commands available"
 NoMacrosLabel.TextColor3 = Color3.fromRGB(150,150,150)
 NoMacrosLabel.Font = Enum.Font.Gotham
 NoMacrosLabel.TextSize = 16*DPI
@@ -178,30 +209,24 @@ CreateBtn.TextSize = 15*DPI
 CreateBtn.Parent = Main
 Instance.new("UICorner",CreateBtn).CornerRadius = UDim.new(0,8)
 
-local DelayUnits = {"Ms","Sec","Minute","Hour","Day","Week","Year"}
+local DelayUnits = {"Ms","Sec","Minute","Hour","Day"}
 local function toMs(v,u)
-	local m = {Ms=1,Sec=1000,Minute=60000,Hour=3600000,Day=86400000,Week=604800000,Year=31536000000}
+	local m = {Ms=1,Sec=1000,Minute=60000,Hour=3600000,Day=86400000}
 	return (v or 0) * (m[u] or 1)
 end
 
-local TimeUnits = {"Ms","Second","Minute","Hour","Day","Week","Month","Year"}
+local TimeUnits = {"Ms","Second","Minute","Hour","Day"}
 local function toSeconds(v,u)
-	local m = {Ms=0.001,Second=1,Minute=60,Hour=3600,Day=86400,Week=604800,Month=2629800,Year=31557600}
+	local m = {Ms=0.001,Second=1,Minute=60,Hour=3600,Day=8640}
 	return (v or 0) * (m[u] or 1)
 end
 
 local function formatTimeRemaining(seconds)
 	if seconds <= 0 then return "Done" end
-	local years = math.floor(seconds/31557600); seconds %= 31557600
-	local months= math.floor(seconds/2629800); seconds %= 2629800
-	local weeks = math.floor(seconds/604800); seconds %= 604800
 	local days  = math.floor(seconds/86400); seconds %= 86400
 	local hours = math.floor(seconds/3600); seconds %= 3600
 	local mins  = math.floor(seconds/60); seconds %= 60
 	local parts = {}
-	if years>0  then table.insert(parts,years.."y") end
-	if months>0 then table.insert(parts,months.."mo") end
-	if weeks>0  then table.insert(parts,weeks.."w") end
 	if days>0   then table.insert(parts,days.."d") end
 	if hours>0  then table.insert(parts,hours.."h") end
 	if mins>0   then table.insert(parts,mins.."m") end
@@ -322,19 +347,6 @@ local function makeEntry(data,idx)
 	cmd.TextXAlignment = Enum.TextXAlignment.Left
 	cmd.ZIndex = 3
 	cmd.Parent = f
-
-	local info = Instance.new("TextLabel")
-	info.Name = "InfoLabel"
-	info.Size = UDim2.new(1,-16,0,20)
-	info.Position = UDim2.new(0,8,0,44)
-	info.BackgroundTransparency = 1
-	info.Text = string.format("Delay: %d %s | Key: %s",data.delayValue,data.delayUnit,(data.keybind and data.keybind.Name) or "F")
-	info.TextColor3 = Color3.fromRGB(120,200,255)
-	info.Font = Enum.Font.Gotham
-	info.TextSize = 10*DPI
-	info.TextXAlignment = Enum.TextXAlignment.Left
-	info.ZIndex = 3
-	info.Parent = f
 
 	local repeatLabel = Instance.new("TextLabel")
 	repeatLabel.Name = "RepeatLabel"
@@ -501,17 +513,6 @@ local function makeEntry(data,idx)
 		if running then stopMacro() else startMacro() end
 	end)
 
-	local function connectKeybind()
-		if keyConn and keyConn.Connected then keyConn:Disconnect() end
-		keyConn = UserInputService.InputBegan:Connect(function(inp,gp)
-			if gp or inp.KeyCode ~= data.keybind then return end
-			if running then stopMacro() else startMacro() end
-		end)
-		table.insert(data.connections,keyConn)
-	end
-	connectKeybind()
-	data.connectKeybind = connectKeybind
-
 	dupBtn.MouseButton1Click:Connect(function()
 		local copy = table.clone(data)
 		copy.name = (copy.name~="" and copy.name or "Macro").." (Copy)"
@@ -593,20 +594,19 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	if Popup then Popup:Destroy() end
 	local isEdit = editData ~= nil
 	local data = isEdit and table.clone(editData) or {
-		name="",command="",delayValue=1,delayUnit="Ms",
-		keybind=Enum.KeyCode.F,stopMode="indefinitely",
-		stopTime=5,stopTimeUnit="Second",stopCycles=10
+        name="",command="",delayValue=1,delayUnit="Ms",stopMode="indefinitely",stopTime=5,stopTimeUnit="Second",stopCycles=10
 	}
 
 	Popup = Instance.new("Frame")
 	Popup.Name = "EditMacroPopup"
-	Popup.Size = UDim2.new(0,360*DPI,0,460*DPI)
+	Popup.Size = UDim2.new(0,300*DPI,0,400*DPI)
 	Popup.Position = UDim2.new(0.5,0,0.5,0)
 	Popup.AnchorPoint = Vector2.new(0.5,0.5)
 	Popup.BackgroundColor3 = Color3.fromRGB(30,30,40)
 	Popup.ZIndex = 10
 	Popup.Parent = ScreenGui
 	Instance.new("UICorner",Popup).CornerRadius = UDim.new(0,12)
+    makeDraggable(Popup)
 
 	local pTitle = Instance.new("TextLabel")
 	pTitle.Size = UDim2.new(1,0,0,36)
@@ -622,7 +622,7 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	local nameBox = Instance.new("TextBox")
 	nameBox.Size = UDim2.new(1,-16,0,32)
 	nameBox.Position = UDim2.new(0,8,0,44)
-	nameBox.PlaceholderText = "Enter Name"
+	nameBox.PlaceholderText = "Enter Macro Name"
 	nameBox.Text = data.name
 	nameBox.BackgroundColor3 = Color3.fromRGB(40,40,55)
 	nameBox.TextColor3 = Color3.new(1,1,1)
@@ -636,11 +636,12 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	local cmdBox = Instance.new("TextBox")
 	cmdBox.Size = UDim2.new(1,-16,0,32)
 	cmdBox.Position = UDim2.new(0,8,0,82)
-	cmdBox.PlaceholderText = "Enter command here, use ''!'' To execute a command"
+	cmdBox.PlaceholderText = "Enter a command here, Use ''!'' at the start of the command"
 	cmdBox.Text = data.command
 	cmdBox.BackgroundColor3 = Color3.fromRGB(40,40,55)
 	cmdBox.TextColor3 = Color3.new(1,1,1)
 	cmdBox.Font = Enum.Font.Gotham
+    cmdBox.TextWrapped = true
 	cmdBox.TextSize = 13*DPI
 	cmdBox.ClearTextOnFocus = false
 	cmdBox.ZIndex = 11
@@ -674,7 +675,7 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	Instance.new("UICorner",delayDrop)
 
 	local dropList = Instance.new("Frame")
-	dropList.Size = UDim2.new(0,90,0,196)
+	dropList.Size = UDim2.new(0,90,0,140*DPI)
 	dropList.Position = UDim2.new(0,106,0,152)
 	dropList.BackgroundColor3 = Color3.fromRGB(40,40,55)
 	dropList.Visible = false
@@ -683,36 +684,9 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	Instance.new("UICorner",dropList)
 	makeDropdown(delayDrop,dropList,DelayUnits,data.delayUnit or "Ms",function(u) data.delayUnit=u end)
 
-	local keyBtn = Instance.new("TextButton")
-	keyBtn.Size = UDim2.new(1,-16,0,32)
-	keyBtn.Position = UDim2.new(0,8,0,162)
-	keyBtn.Text = "Key: "..(data.keybind and data.keybind.Name or "F")
-	keyBtn.BackgroundColor3 = Color3.fromRGB(40,40,55)
-	keyBtn.TextColor3 = Color3.new(1,1,1)
-	keyBtn.Font = Enum.Font.Gotham
-	keyBtn.TextSize = 13*DPI
-	keyBtn.ZIndex = 11
-	keyBtn.Parent = Popup
-	Instance.new("UICorner",keyBtn)
-
-	local waiting = false
-	keyBtn.MouseButton1Click:Connect(function()
-		if waiting then return end
-		waiting = true
-		keyBtn.Text = "Press any key..."
-		local c; c = UserInputService.InputBegan:Connect(function(inp)
-			if inp.KeyCode ~= Enum.KeyCode.Unknown then
-				data.keybind = inp.KeyCode
-				keyBtn.Text = "Key: "..inp.KeyCode.Name
-				waiting = false
-				c:Disconnect()
-			end
-		end)
-	end)
-
 	local stopAfterLabel = Instance.new("TextLabel")
 	stopAfterLabel.Size = UDim2.new(1,-16,0,24)
-	stopAfterLabel.Position = UDim2.new(0,8,0,196)
+	stopAfterLabel.Position = UDim2.new(0,8,0,158)
 	stopAfterLabel.BackgroundTransparency = 1
 	stopAfterLabel.Text = "Stop after"
 	stopAfterLabel.TextColor3 = Color3.fromRGB(200,200,200)
@@ -789,9 +763,9 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 		return row
 	end
 
-	local timeRow  = makeRadio(220,"Amount of time","time")
-	local cycleRow = makeRadio(256,"Number of cycles","cycles")
-	makeRadio(292,"Run indefinitely","indefinitely")
+    local timeRow  = makeRadio(182, "Amount of time", "time")
+    local cycleRow = makeRadio(218, "Number of cycles", "cycles")
+    makeRadio(254, "Run indefinitely", "indefinitely")
 
 	local timeInput = Instance.new("TextBox")
 	timeInput.Size = UDim2.new(0,70,0,28)
@@ -825,14 +799,14 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 	timeDrop.Parent = timeRow
 	Instance.new("UICorner",timeDrop)
 
-	local tList = Instance.new("Frame")
-	tList.Size = UDim2.new(0,70,0,224)
-	tList.Position = UDim2.new(0,208,0,30)
-	tList.BackgroundColor3 = Color3.fromRGB(40,40,55)
-	tList.Visible = false
-	tList.ZIndex = 15
-	tList.Parent = timeRow
-	Instance.new("UICorner",tList)
+    local tList = Instance.new("Frame")
+    tList.Size = UDim2.new(0, 70, 0, 140 * DPI) 
+    tList.Position = UDim2.new(0, 208, 0, 30)
+    tList.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+    tList.Visible = false
+    tList.ZIndex = 15
+    tList.Parent = timeRow
+    Instance.new("UICorner", tList)
 	makeDropdown(timeDrop,tList,TimeUnits,data.stopTimeUnit or "Second",function(u) data.stopTimeUnit=u end)
 
 	local cycleInput = Instance.new("TextBox")
@@ -896,7 +870,6 @@ function CmdEditMacro(editData, oldIdx, oldFrame)
 			command = cmd,
 			delayValue = dVal,
 			delayUnit = delayDrop.Text,
-			keybind = data.keybind,
 			stopMode = data.stopMode,
 			stopTime = nil,
 			stopTimeUnit = nil,
@@ -1437,7 +1410,11 @@ end
 
 ConfigBtn.MouseButton1Click:Connect(openConfigPopup)
 
-CreateBtn.MouseButton1Click:Connect(function() CmdEditMacro() end)
+CreateBtn.MouseButton1Click:Connect(function() 
+	if not Popup or not Popup.Parent then
+		CmdEditMacro() 
+    end
+end)
 
 updateNoMacrosLabel()
 updateCanvas()
@@ -1446,3 +1423,8 @@ local cam = workspace.CurrentCamera
 local scale = math.min(1, cam.ViewportSize.X*0.7/(380*DPI), cam.ViewportSize.Y*0.7/(480*DPI))
 local uiScale = Instance.new("UIScale",Main)
 uiScale.Scale = scale
+
+local coreGui = game:GetService("CoreGui")
+if coreGui:FindFirstChild("MacroManagerGUI") then
+    coreGui.MacroManagerGUI.Enabled = not coreGui.MacroManagerGUI.Enabled
+end
