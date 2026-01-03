@@ -335,7 +335,7 @@ local function monitorButtonVisibility()
     end
 end
 
-monitorButtonVisibility()--[[ Shit codes ]]
+monitorButtonVisibility() -- Shit codes 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local events = player.PlayerScripts.Events.temporary_events
@@ -381,5 +381,4 @@ end
 
 playSequentialSounds()
 	end
-end)
-]]
+end)]]
