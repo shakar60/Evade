@@ -92,6 +92,7 @@ Main.AnchorPoint = Vector2.new(0.5,0.5)
 Main.BackgroundColor3 = Color3.fromRGB(25,25,35)
 Main.ClipsDescendants = true
 Main.Parent = ScreenGui
+Main.Draggable = true
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,12)
 
 local TitleBar = Instance.new("Frame")
