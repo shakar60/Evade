@@ -1423,8 +1423,3 @@ local cam = workspace.CurrentCamera
 local scale = math.min(1, cam.ViewportSize.X*0.7/(380*DPI), cam.ViewportSize.Y*0.7/(480*DPI))
 local uiScale = Instance.new("UIScale",Main)
 uiScale.Scale = scale
-
-local coreGui = game:GetService("CoreGui")
-if coreGui:FindFirstChild("MacroManagerGUI") then
-    coreGui.MacroManagerGUI.Enabled = not coreGui.MacroManagerGUI.Enabled
-end
