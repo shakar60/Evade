@@ -227,7 +227,7 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/shakar60/Evade/refs/h
 
 
 
--- revote button fixed
+--[[ -- revote button fixed
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -382,3 +382,4 @@ end
 playSequentialSounds()
 	end
 end)
+]]
