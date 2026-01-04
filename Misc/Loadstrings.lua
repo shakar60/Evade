@@ -222,7 +222,7 @@ autoSaveConfig()
 --no way you falling for that 💀
 
 
---loadstring(game:HttpGet('https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/VIP%20Macro%20Command.lua'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/shakar60/Evade/refs/heads/main/Misc/VIP%20Macro%20Command.lua'))()
 
 
 
