@@ -7,19 +7,16 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Check if your custom GUI exists
 local customTopGui = playerGui:FindFirstChild("CustomTopGui")
 if not customTopGui then
     return
 end
 
--- Find the scrolling frame in your existing GUI
 local scrollingFrame = customTopGui:FindFirstChild("Frame"):FindFirstChild("Right")
 if not scrollingFrame then
     return
 end
 
--- Prevent duplicate button
 if scrollingFrame:FindFirstChild("LeaderboardButton") then
     return
 end
